@@ -1,0 +1,91 @@
+########################################################################### 
+Kruskal-Wallis test
+
+richness.plot  %>% 
+  group_by(Plot)  %>% 
+  get_summary_stats(richness, type = 'common')
+
+
+
+# A tibble: 1 x 6
+.y.          n statistic    df     p method        
+* <chr>    <int>     <dbl> <int> <dbl> <chr>         
+  1 richness  2030      2029  2023 0.458 Kruskal-Wallis
+
+# Effect size
+
+richness.plot %>% kruskal_effsize(richness ~ Plot)
+
+# A tibble: 1 x 5
+.y.          n effsize method  magnitude
+* <chr>    <int>   <dbl> <chr>   <ord>    
+  1 richness  2030    1.00 eta2[H] large 
+
+pwc <- richness.plot  %>% 
+  dunn_test(richness ~ Plot, p.adjust.method = "bonferroni")
+summary(pwc)
+
+
+# Kruskal-Wallis test
+
+eco.kruskal <- richness.plot %>% 
+  kruskal_test(richness ~ Eco) # o Ecosystem
+eco.kruskal
+
+
+
+
+pwc.tukey <- richness.plot  %>% 
+  dunn_test(richness ~ Eco, p.adjust.method = "tukeyHSD")
+pwc.tukey
+
+################################################################
+richness.plot$Eco <- as.factor(richness.plot$Eco)
+
+levels(richness.plot$Eco)
+
+# Compute summary statistics by groups
+
+richness.plot   %>% 
+  group_by(Eco)   %>% 
+  summarise(
+    count = n(),
+    mean = mean(richness, na.rm = TRUE),
+    sd = sd(richness, na.rm = TRUE),
+    median = median(richness, na.rm = TRUE),
+    IQR = IQR(richness, na.rm = TRUE)
+  )
+
+
+# Kruskal Wallis test
+
+res.kruskal <- richness.plot %>% 
+  kruskal_test(richness ~ Eco) # o Ecosystem
+res.kruskal
+
+# A tibble: 1 x 6
+.y.          n statistic    df        p method        
+* <chr>    <int>     <dbl> <int>    <dbl> <chr>         
+  1 richness  2030      255.    11 2.03e-48 Kruskal-Wallis
+
+# Pairwise comparison
+pairwise <- pairwise.wilcox.test(richness.plot$richness, richness.plot$Eco,
+                     p.adjust.method = "BH")
+
+ggboxplot(richness.plot, x = "Eco", y = "richness",
+          color = "Eco", palette = "ucscgb") +
+  stat_compare_means()
+
+comp <- ggboxplot(richness.plot, x = "Eco", y = "richness",
+          color = "Eco", palette = "ucscgb") +
+  stat_compare_means(comparison = pairwise)
+
+comp
+# Pairwise-comparisons - Dunn's test
+
+pwc.eco <- richness.plot  %>% 
+  dunn_test(richness ~ Eco, p.adjust.method = "bonferroni")
+summary(pwc.eco)
+
+
+
